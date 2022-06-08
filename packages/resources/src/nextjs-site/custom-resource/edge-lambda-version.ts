@@ -1,11 +1,8 @@
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
-const AWS = require("aws-sdk");
-AWS.config.logger = console;
+import Lambda from "aws-sdk/clients/lambda";
 
 import { log } from "./util.js";
 import * as cfnResponse from "./cfn-response.js";
-const lambda = new AWS.Lambda({ region: "us-east-1" });
+const lambda = new Lambda({ region: "us-east-1" });
 const LIVE_ALIAS = "live";
 
 export async function handler(
@@ -45,7 +42,7 @@ export async function handler(
   return cfnResponse.submitResponse("SUCCESS", {
     ...cfnRequest,
     PhysicalResourceId,
-    Data,
+    Data
   });
 }
 
@@ -54,7 +51,7 @@ async function createVersion(functionName: string) {
 
   const resp = await lambda
     .publishVersion({
-      FunctionName: functionName,
+      FunctionName: functionName
     })
     .promise();
 
@@ -80,12 +77,12 @@ async function createAlias(functionName: string, version: string) {
       .updateAlias({
         Name: LIVE_ALIAS,
         FunctionName: functionName,
-        FunctionVersion: version,
+        FunctionVersion: version
       })
       .promise();
 
     log("response", resp);
-  } catch (e: any) {
+  } catch (e) {
     // If alias has not be created, create the alias
     if (
       e.code === "ResourceNotFoundException" &&
@@ -96,7 +93,7 @@ async function createAlias(functionName: string, version: string) {
         .createAlias({
           Name: LIVE_ALIAS,
           FunctionName: functionName,
-          FunctionVersion: version,
+          FunctionVersion: version
         })
         .promise();
 
@@ -116,7 +113,7 @@ async function deleteOldVersions(functionName: string) {
     resp = await lambda
       .getAlias({
         FunctionName: functionName,
-        Name: LIVE_ALIAS,
+        Name: LIVE_ALIAS
       })
       .promise();
     log(`getAlias`, resp);
@@ -126,7 +123,7 @@ async function deleteOldVersions(functionName: string) {
     resp = await lambda
       .listVersionsByFunction({
         FunctionName: functionName,
-        MaxItems: 50,
+        MaxItems: 50
       })
       .promise();
     log(`listVersionsByFunction`, resp);
@@ -145,7 +142,7 @@ async function deleteOldVersions(functionName: string) {
         resp = await lambda
           .deleteFunction({
             FunctionName: functionName,
-            Qualifier: version,
+            Qualifier: version
           })
           .promise();
         log("response", resp);

@@ -1,12 +1,10 @@
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
-const AWS = require("aws-sdk");
-AWS.config.logger = console;
+import S3 from "aws-sdk/clients/s3";
+import Lambda from "aws-sdk/clients/lambda";
 
 import { log } from "./util.js";
 import * as cfnResponse from "./cfn-response.js";
-const s3 = new AWS.S3({ region: "us-east-1" });
-const lambda = new AWS.Lambda({ region: "us-east-1" });
+const s3 = new S3({ region: "us-east-1" });
+const lambda = new Lambda({ region: "us-east-1" });
 
 export async function handler(
   cfnRequest: AWSLambda.CloudFormationCustomResourceEvent
@@ -30,7 +28,7 @@ export async function handler(
       const ret = await createFunction(functionName, params);
       PhysicalResourceId = ret.FunctionArn;
       Data = {
-        FunctionArn: ret.FunctionArn,
+        FunctionArn: ret.FunctionArn
       };
       break;
     }
@@ -45,7 +43,7 @@ export async function handler(
       }
       PhysicalResourceId = cfnRequest.PhysicalResourceId;
       Data = {
-        FunctionArn: cfnRequest.PhysicalResourceId,
+        FunctionArn: cfnRequest.PhysicalResourceId
       };
       break;
     }
@@ -61,7 +59,7 @@ export async function handler(
   return cfnResponse.submitResponse("SUCCESS", {
     ...cfnRequest,
     PhysicalResourceId,
-    Data,
+    Data
   });
 }
 
@@ -88,7 +86,7 @@ async function copyAsset(bucket: string, params: any) {
     .copyObject({
       Bucket: bucket,
       CopySource: `/${params.Code.S3Bucket}/${params.Code.S3Key}`,
-      Key: params.Code.S3Key,
+      Key: params.Code.S3Key
     })
     .promise();
   log(`response`, resp);
@@ -103,7 +101,7 @@ async function createFunction(functionName: string, params: any) {
   const resp = await lambda
     .createFunction({
       ...params,
-      FunctionName: functionName,
+      FunctionName: functionName
     })
     .promise();
 
@@ -118,7 +116,7 @@ async function updateFunctionConfiguration(functionName: string, params: any) {
   const resp = await lambda
     .updateFunctionConfiguration({
       ...params,
-      Code: undefined,
+      Code: undefined
     })
     .promise();
   log(`response`, resp);
@@ -131,7 +129,7 @@ async function updateFunctionCode(functionName: string, params: any) {
     .updateFunctionCode({
       FunctionName: functionName,
       Publish: false,
-      ...params.Code,
+      ...params.Code
     })
     .promise();
   log(`response`, resp);
@@ -142,7 +140,7 @@ async function deleteFunction(functionName: string) {
 
   const resp = await lambda
     .deleteFunction({
-      FunctionName: functionName,
+      FunctionName: functionName
     })
     .promise();
 
@@ -153,7 +151,7 @@ function isConfigurationChanged(params: any, oldParams: any) {
   return (
     Object.keys(params).length !== Object.keys(params).length ||
     ["Description", "Handler", "Runtime", "MemorySize", "Timeout", "Role"].some(
-      (p) => params[p] !== oldParams[p]
+      p => params[p] !== oldParams[p]
     )
   );
 }

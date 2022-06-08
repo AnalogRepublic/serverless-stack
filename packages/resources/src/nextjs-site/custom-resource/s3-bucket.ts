@@ -1,11 +1,8 @@
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
-const AWS = require("aws-sdk");
-AWS.config.logger = console;
+import S3 from "aws-sdk/clients/s3";
 
 import { log } from "./util.js";
 import * as cfnResponse from "./cfn-response.js";
-const s3 = new AWS.S3({ region: "us-east-1" });
+const s3 = new S3({ region: "us-east-1" });
 
 export async function handler(
   cfnRequest: AWSLambda.CloudFormationCustomResourceEvent
@@ -24,7 +21,7 @@ export async function handler(
     case "Create":
       await createBucket(bucketName);
       responseData = {
-        BucketName: bucketName,
+        BucketName: bucketName
       };
       break;
     case "Update":
@@ -41,7 +38,7 @@ export async function handler(
   return cfnResponse.submitResponse("SUCCESS", {
     ...cfnRequest,
     PhysicalResourceId: bucketName,
-    Data: responseData,
+    Data: responseData
   });
 }
 
@@ -50,7 +47,7 @@ async function createBucket(bucketName: string) {
 
   const resp = await s3
     .createBucket({
-      Bucket: bucketName,
+      Bucket: bucketName
     })
     .promise();
 
@@ -62,7 +59,7 @@ async function deleteBucket(bucketName: string) {
 
   const resp = await s3
     .deleteBucket({
-      Bucket: bucketName,
+      Bucket: bucketName
     })
     .promise();
 
@@ -92,7 +89,7 @@ async function emptyBucket(bucketName: string) {
     .promise();
   const contents = [
     ...(listedObjects.Versions ?? []),
-    ...(listedObjects.DeleteMarkers ?? []),
+    ...(listedObjects.DeleteMarkers ?? [])
   ];
   if (contents.length === 0) {
     return;
@@ -100,7 +97,7 @@ async function emptyBucket(bucketName: string) {
 
   const records = contents.map((record: any) => ({
     Key: record.Key,
-    VersionId: record.VersionId,
+    VersionId: record.VersionId
   }));
   await s3
     .deleteObjects({ Bucket: bucketName, Delete: { Objects: records } })
