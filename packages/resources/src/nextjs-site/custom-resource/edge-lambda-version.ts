@@ -42,7 +42,7 @@ export async function handler(
   return cfnResponse.submitResponse("SUCCESS", {
     ...cfnRequest,
     PhysicalResourceId,
-    Data
+    Data,
   });
 }
 
@@ -51,7 +51,7 @@ async function createVersion(functionName: string) {
 
   const resp = await lambda
     .publishVersion({
-      FunctionName: functionName
+      FunctionName: functionName,
     })
     .promise();
 
@@ -77,12 +77,12 @@ async function createAlias(functionName: string, version: string) {
       .updateAlias({
         Name: LIVE_ALIAS,
         FunctionName: functionName,
-        FunctionVersion: version
+        FunctionVersion: version,
       })
       .promise();
 
     log("response", resp);
-  } catch (e) {
+  } catch (e: any) {
     // If alias has not be created, create the alias
     if (
       e.code === "ResourceNotFoundException" &&
@@ -93,7 +93,7 @@ async function createAlias(functionName: string, version: string) {
         .createAlias({
           Name: LIVE_ALIAS,
           FunctionName: functionName,
-          FunctionVersion: version
+          FunctionVersion: version,
         })
         .promise();
 
@@ -113,7 +113,7 @@ async function deleteOldVersions(functionName: string) {
     resp = await lambda
       .getAlias({
         FunctionName: functionName,
-        Name: LIVE_ALIAS
+        Name: LIVE_ALIAS,
       })
       .promise();
     log(`getAlias`, resp);
@@ -123,7 +123,7 @@ async function deleteOldVersions(functionName: string) {
     resp = await lambda
       .listVersionsByFunction({
         FunctionName: functionName,
-        MaxItems: 50
+        MaxItems: 50,
       })
       .promise();
     log(`listVersionsByFunction`, resp);
@@ -142,7 +142,7 @@ async function deleteOldVersions(functionName: string) {
         resp = await lambda
           .deleteFunction({
             FunctionName: functionName,
-            Qualifier: version
+            Qualifier: version,
           })
           .promise();
         log("response", resp);
